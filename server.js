@@ -16,7 +16,7 @@ const fetch = require("node-fetch");
 const app = express();
 
 // Load config variables
-const { DATABASE_URL, PORT } = require("./config/database");
+const { LIVE_DATABASE_URL, PORT } = require("./config/database");
 
 // Required to view Request Body (req.body) in JSON
 app.use(bodyParser.json());
@@ -35,8 +35,10 @@ app.use(morgan("dev"));
 mongoose.Promise = global.Promise;
 
 // WORKERS
-const runOpenCheckinWorker = require('./workers/openCheckins')(cron, fetch);
-const runCloseCheckinWorker = require('./workers/closeCheckins')(cron, fetch);
+const runOpenCheckinWorker = require("./workers/openCheckins")(cron, fetch);
+const runCloseCheckinWorker = require("./workers/closeCheckins")(cron, fetch);
+const runCreateRecurringEventsWorker = require("./workers/createRecurringEvents")(cron, fetch);
+const runSlackBot = require("./workers/slackbot")(fetch);
 
 // ROUTES
 const eventsRouter = require("./routers/events.router");
@@ -45,6 +47,9 @@ const answersRouter = require("./routers/answers.router");
 const usersRouter = require("./routers/users.router");
 const questionsRouter = require("./routers/questions.router");
 const checkUserRouter = require("./routers/checkUser.router");
+const grantPermissionRouter = require("./routers/grantpermission.router");
+const projectsRouter = require("./routers/projects.router");
+const recurringEventsRouter = require("./routers/recurringEvents.router");
 
 app.use("/api/events", eventsRouter);
 app.use("/api/checkins", checkInsRouter);
@@ -52,6 +57,9 @@ app.use("/api/answers", answersRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/questions", questionsRouter);
 app.use("/api/checkuser", checkUserRouter);
+app.use("/api/grantpermission", grantPermissionRouter);
+app.use("/api/projects", projectsRouter);
+app.use("/api/recurringevents", recurringEventsRouter);
 
 const CLIENT_BUILD_PATH = path.join(__dirname, "./client/build");
 
@@ -69,45 +77,45 @@ app.get("*", (req, res) => {
 let server;
 
 async function runServer(databaseUrl, port = PORT) {
-	await mongoose
-		.connect(databaseUrl, {
-			useNewUrlParser: true,
-			useCreateIndex: true,
-			useUnifiedTopology: true,
-			useFindAndModify: false
-		})
-		.catch(err => err);
+  await mongoose
+    .connect(databaseUrl, {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+    })
+    .catch((err) => err);
 
-	server = app
-		.listen(port, () => {
-			console.log(
-				`Mongoose connected from runServer() and is listening on ${port}`
-			);
-		})
-		.on("error", err => {
-			mongoose.disconnect();
-			return err;
-		});
+  server = app
+    .listen(port, () => {
+      console.log(
+        `Mongoose connected from runServer() and is listening on ${port}`
+      );
+    })
+    .on("error", (err) => {
+      mongoose.disconnect();
+      return err;
+    });
 }
 
 async function closeServer() {
-	await mongoose.disconnect().then(() => {
-		return new Promise((resolve, reject) => {
-			console.log("Closing Mongoose connection. Bye");
+  await mongoose.disconnect().then(() => {
+    return new Promise((resolve, reject) => {
+      console.log("Closing Mongoose connection. Bye");
 
-			server.close(err => {
-				if (err) {
-					return reject(err);
-				}
+      server.close((err) => {
+        if (err) {
+          return reject(err);
+        }
 
-				resolve();
-			});
-		});
-	});
+        resolve();
+      });
+    });
+  });
 }
 
 if (require.main === module) {
-  runServer(DATABASE_URL).catch(err => console.error(err));
+  runServer(LIVE_DATABASE_URL).catch((err) => console.error(err));
 }
 
 // app.listen(process.env.PORT || PORT, () => {
