@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../../sass/ProjectLeaderDashboard.module.scss";
 import AttendeeTableRow from "./AttendeeTableRow";
-import ls from "local-storage";
+import ls from "local-storage"
 
 const AttendeeTable = ({ attendees, activeMeeting }) => {
     const gDriveClickHandler = (email) => {
