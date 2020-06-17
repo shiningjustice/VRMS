@@ -3,11 +3,13 @@ import "../sass/Dashboard.scss";
 import styles from "../sass/ProjectLeaderDashboard.module.scss";
 import UpcomingEvent from "../components/presentational/upcomingEvent";
 import AttendeeTable from "../components/dashboard/AttendeeTable";
+import ProjectTeamMemberTable from "../components/dashboard/ProjectTeamMemberTable";
 import DashboardButton from "../components/dashboard/DashboardButton";
 const ProjectLeaderDashboard = () => {
     const [isCheckInReady, setIsCheckInReady] = useState();
     const [nextEvent, setNextEvent] = useState([]);
     const [attendees, setAttendees] = useState([]);
+    // const [projectTeamMembers, setprojectTeamMembers] = useState([]);
 
     async function getNextEvent() {
         // event id temporarily hard coded so actual check in data would be listed
@@ -51,6 +53,21 @@ const ProjectLeaderDashboard = () => {
         }
     }
 
+    // async function getProjectTeamMembers() {
+    //     try {
+    //         const event = await fetch(
+    //             "api/projectteammembers/"
+    //             //  add something to get the members of the specific project itself 
+    //         );
+
+    //         const projectTeamMembersJson = await event.json();
+    //         console.log(projectTeamMembersJson);
+    //         setProjectTeamMembers(projectTeamMembersJson);
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
+
     async function setCheckInReady(e, nextEventId) {
         e.preventDefault();
         try {
@@ -72,6 +89,7 @@ const ProjectLeaderDashboard = () => {
     useEffect(() => {
         getNextEvent();
         getAttendees();
+        // getProjectTeamMembers();
     }, []);
 
     return (
@@ -101,10 +119,13 @@ const ProjectLeaderDashboard = () => {
                             </p>
                             <DashboardButton>Download .csv</DashboardButton>
                         </div>
-                        <AttendeeTable
+                        <ProjectTeamMemberTable
+                            projectTeamMembers={projectTeamMembers}
+                        ></ProjectTeamMemberTable>
+                        {/* <AttendeeTable
                             attendees={attendees}
                             activeMeeting={true}
-                        ></AttendeeTable>
+                        ></AttendeeTable> */}
                     </React.Fragment>
                 ) : null}
             </div>
